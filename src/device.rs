@@ -1,5 +1,6 @@
 use std::convert::TryInto;
 use std::ffi::CString;
+use std::io::{Error, ErrorKind};
 
 use anyhow::{Context, Result};
 use libc::c_int;
@@ -109,8 +110,13 @@ impl Device {
     }
 
     /// Query device EPC setting
-    pub fn query_epc_setting(&self) -> Result<EPCSetting> {
-        let pcl = self.read_log_dma_ext(0x08)?;
+    pub fn query_epc_setting(&self) -> Result<EPCSetting, Error> {
+        // let pcl = self.read_log_dma_ext(0x08)?;
+
+        let pcl = self.read_log_dma_ext(0x08).unwrap();
+        if pcl.len() < 512 {
+            return Err(Error::new(ErrorKind::Unsupported, format!("EPC is not supported on this drive")));
+        }
 
         let idle_power_cond = &pcl[0..512];
         let standby_power_cond = &pcl[512..];
