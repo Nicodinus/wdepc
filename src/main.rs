@@ -2,6 +2,7 @@ use crate::device::{Device, PowerMode};
 use anyhow::Result;
 use clap::{App, AppSettings, Arg, SubCommand};
 use device::EPCSetting;
+use serde_json::json;
 
 mod device;
 mod ffi;
@@ -119,9 +120,19 @@ if save is set, save current timer
                 .takes_value(true)
                 .required(true),
         )
+        .arg(
+            Arg::with_name("format")
+                .long("format")
+                .short("f")
+                .help("output format, only json supported")
+                .possible_values(&["json", "text"])
+                .default_value("text")
+                .takes_value(true),
+        )
         .get_matches();
 
     let device = args.value_of("device").unwrap();
+    let format = args.value_of("format").unwrap();
     let mut device = Device::open(device)?;
 
     match args.subcommand() {
@@ -137,135 +148,230 @@ if save is set, save current timer
                 ..
             } = setting;
 
-            println!("* = enabled");
-            println!("All times are in 100 milliseconds");
-            println!();
+            match format {
+                "json" => {
 
-            println!(
-                "{:<9}  {:<13} {:<13} {:<11} {:<13} {:<10} {:<7}",
-                "Name",
-                "Current Timer",
-                "Default Timer",
-                "Saved Timer",
-                "Recovery Time",
-                "Changeable",
-                "Savable"
-            );
+                    println!("{}", json!({
+                        "idle_a": {
+                            "current": {
+                                "enabled": idle_a.current_enable,
+                                "value": idle_a.current_timer,
+                            },
+                            "default": {
+                                "enabled": idle_a.default_enable,
+                                "value": idle_a.default_timer,
+                            },
+                            "saved": {
+                                "enabled": idle_a.saved_enable,
+                                "value": idle_a.saved_timer,
+                            },
+                            "recovery_time": idle_a.recovery_time,
+                            "changeable": idle_a.changeable,
+                            "savable": idle_a.savable,
+                        },
+                        "idle_b": {
+                            "current": {
+                                "enabled": idle_b.current_enable,
+                                "value": idle_b.current_timer,
+                            },
+                            "default": {
+                                "enabled": idle_b.default_enable,
+                                "value": idle_b.default_timer,
+                            },
+                            "saved": {
+                                "enabled": idle_b.saved_enable,
+                                "value": idle_b.saved_timer,
+                            },
+                            "recovery_time": idle_b.recovery_time,
+                            "changeable": idle_b.changeable,
+                            "savable": idle_b.savable,
+                        },
+                        "idle_c": {
+                            "current": {
+                                "enabled": idle_c.current_enable,
+                                "value": idle_c.current_timer,
+                            },
+                            "default": {
+                                "enabled": idle_c.default_enable,
+                                "value": idle_c.default_timer,
+                            },
+                            "saved": {
+                                "enabled": idle_c.saved_enable,
+                                "value": idle_c.saved_timer,
+                            },
+                            "recovery_time": idle_c.recovery_time,
+                            "changeable": idle_c.changeable,
+                            "savable": idle_c.savable,
+                        },
+                        "standby_y": {
+                            "current": {
+                                "enabled": standby_y.current_enable,
+                                "value": standby_y.current_timer,
+                            },
+                            "default": {
+                                "enabled": standby_y.default_enable,
+                                "value": standby_y.default_timer,
+                            },
+                            "saved": {
+                                "enabled": standby_y.saved_enable,
+                                "value": standby_y.saved_timer,
+                            },
+                            "recovery_time": standby_y.recovery_time,
+                            "changeable": standby_y.changeable,
+                            "savable": standby_y.savable,
+                        },
+                        "standby_z": {
+                            "current": {
+                                "enabled": standby_z.current_enable,
+                                "value": standby_z.current_timer,
+                            },
+                            "default": {
+                                "enabled": standby_z.default_enable,
+                                "value": standby_z.default_timer,
+                            },
+                            "saved": {
+                                "enabled": standby_z.saved_enable,
+                                "value": standby_z.saved_timer,
+                            },
+                            "recovery_time": standby_z.recovery_time,
+                            "changeable": standby_z.changeable,
+                            "savable": standby_z.savable,
+                        }
+                    }).to_string());
 
-            println!(
-                "{:<9}  {:<13} {:<13} {:<11} {:<13} {:<10} {:<7}",
-                "Idle A",
-                if idle_a.current_enable {
-                    format!("*{}", idle_a.current_timer)
-                } else {
-                    idle_a.current_timer.to_string()
                 },
-                if idle_a.default_enable {
-                    format!("*{}", idle_a.default_timer)
-                } else {
-                    idle_a.default_timer.to_string()
-                },
-                if idle_a.saved_enable {
-                    format!("*{}", idle_a.saved_timer)
-                } else {
-                    idle_a.saved_timer.to_string()
-                },
-                idle_a.recovery_time,
-                idle_a.changeable,
-                idle_a.savable
-            );
+                _ => {
+                    println!("* = enabled");
+                    println!("All times are in 100 milliseconds");
+                    println!();
 
-            println!(
-                "{:<9}  {:<13} {:<13} {:<11} {:<13} {:<10} {:<7}",
-                "Idle B",
-                if idle_b.current_enable {
-                    format!("*{}", idle_b.current_timer)
-                } else {
-                    idle_b.current_timer.to_string()
-                },
-                if idle_b.default_enable {
-                    format!("*{}", idle_b.default_timer)
-                } else {
-                    idle_b.default_timer.to_string()
-                },
-                if idle_b.saved_enable {
-                    format!("*{}", idle_b.saved_timer)
-                } else {
-                    idle_b.saved_timer.to_string()
-                },
-                idle_b.recovery_time,
-                idle_b.changeable,
-                idle_b.savable
-            );
+                    println!(
+                        "{:<9}  {:<13} {:<13} {:<11} {:<13} {:<10} {:<7}",
+                        "Name",
+                        "Current Timer",
+                        "Default Timer",
+                        "Saved Timer",
+                        "Recovery Time",
+                        "Changeable",
+                        "Savable"
+                    );
 
-            println!(
-                "{:<9}  {:<13} {:<13} {:<11} {:<13} {:<10} {:<7}",
-                "Idle C",
-                if idle_c.current_enable {
-                    format!("*{}", idle_c.current_timer)
-                } else {
-                    idle_c.current_timer.to_string()
-                },
-                if idle_c.default_enable {
-                    format!("*{}", idle_c.default_timer)
-                } else {
-                    idle_c.default_timer.to_string()
-                },
-                if idle_c.saved_enable {
-                    format!("*{}", idle_c.saved_timer)
-                } else {
-                    idle_c.saved_timer.to_string()
-                },
-                idle_c.recovery_time,
-                idle_c.changeable,
-                idle_c.savable
-            );
+                    println!(
+                        "{:<9}  {:<13} {:<13} {:<11} {:<13} {:<10} {:<7}",
+                        "Idle A",
+                        if idle_a.current_enable {
+                            format!("*{}", idle_a.current_timer)
+                        } else {
+                            idle_a.current_timer.to_string()
+                        },
+                        if idle_a.default_enable {
+                            format!("*{}", idle_a.default_timer)
+                        } else {
+                            idle_a.default_timer.to_string()
+                        },
+                        if idle_a.saved_enable {
+                            format!("*{}", idle_a.saved_timer)
+                        } else {
+                            idle_a.saved_timer.to_string()
+                        },
+                        idle_a.recovery_time,
+                        idle_a.changeable,
+                        idle_a.savable
+                    );
 
-            println!(
-                "{:<9}  {:<13} {:<13} {:<11} {:<13} {:<10} {:<7}",
-                "Standby Y",
-                if standby_y.current_enable {
-                    format!("*{}", standby_y.current_timer)
-                } else {
-                    standby_y.current_timer.to_string()
-                },
-                if standby_y.default_enable {
-                    format!("*{}", standby_y.default_timer)
-                } else {
-                    standby_y.default_timer.to_string()
-                },
-                if standby_y.saved_enable {
-                    format!("*{}", standby_y.saved_timer)
-                } else {
-                    standby_y.saved_timer.to_string()
-                },
-                standby_y.recovery_time,
-                standby_y.changeable,
-                standby_y.savable
-            );
+                    println!(
+                        "{:<9}  {:<13} {:<13} {:<11} {:<13} {:<10} {:<7}",
+                        "Idle B",
+                        if idle_b.current_enable {
+                            format!("*{}", idle_b.current_timer)
+                        } else {
+                            idle_b.current_timer.to_string()
+                        },
+                        if idle_b.default_enable {
+                            format!("*{}", idle_b.default_timer)
+                        } else {
+                            idle_b.default_timer.to_string()
+                        },
+                        if idle_b.saved_enable {
+                            format!("*{}", idle_b.saved_timer)
+                        } else {
+                            idle_b.saved_timer.to_string()
+                        },
+                        idle_b.recovery_time,
+                        idle_b.changeable,
+                        idle_b.savable
+                    );
 
-            println!(
-                "{:<9}  {:<13} {:<13} {:<11} {:<13} {:<10} {:<7}",
-                "Standby Z",
-                if standby_z.current_enable {
-                    format!("*{}", standby_z.current_timer)
-                } else {
-                    standby_z.current_timer.to_string()
+                    println!(
+                        "{:<9}  {:<13} {:<13} {:<11} {:<13} {:<10} {:<7}",
+                        "Idle C",
+                        if idle_c.current_enable {
+                            format!("*{}", idle_c.current_timer)
+                        } else {
+                            idle_c.current_timer.to_string()
+                        },
+                        if idle_c.default_enable {
+                            format!("*{}", idle_c.default_timer)
+                        } else {
+                            idle_c.default_timer.to_string()
+                        },
+                        if idle_c.saved_enable {
+                            format!("*{}", idle_c.saved_timer)
+                        } else {
+                            idle_c.saved_timer.to_string()
+                        },
+                        idle_c.recovery_time,
+                        idle_c.changeable,
+                        idle_c.savable
+                    );
+
+                    println!(
+                        "{:<9}  {:<13} {:<13} {:<11} {:<13} {:<10} {:<7}",
+                        "Standby Y",
+                        if standby_y.current_enable {
+                            format!("*{}", standby_y.current_timer)
+                        } else {
+                            standby_y.current_timer.to_string()
+                        },
+                        if standby_y.default_enable {
+                            format!("*{}", standby_y.default_timer)
+                        } else {
+                            standby_y.default_timer.to_string()
+                        },
+                        if standby_y.saved_enable {
+                            format!("*{}", standby_y.saved_timer)
+                        } else {
+                            standby_y.saved_timer.to_string()
+                        },
+                        standby_y.recovery_time,
+                        standby_y.changeable,
+                        standby_y.savable
+                    );
+
+                    println!(
+                        "{:<9}  {:<13} {:<13} {:<11} {:<13} {:<10} {:<7}",
+                        "Standby Z",
+                        if standby_z.current_enable {
+                            format!("*{}", standby_z.current_timer)
+                        } else {
+                            standby_z.current_timer.to_string()
+                        },
+                        if standby_z.default_enable {
+                            format!("*{}", standby_z.default_timer)
+                        } else {
+                            standby_z.default_timer.to_string()
+                        },
+                        if standby_z.saved_enable {
+                            format!("*{}", standby_z.saved_timer)
+                        } else {
+                            standby_z.saved_timer.to_string()
+                        },
+                        standby_z.recovery_time,
+                        standby_z.changeable,
+                        standby_z.savable
+                    );
                 },
-                if standby_z.default_enable {
-                    format!("*{}", standby_z.default_timer)
-                } else {
-                    standby_z.default_timer.to_string()
-                },
-                if standby_z.saved_enable {
-                    format!("*{}", standby_z.saved_timer)
-                } else {
-                    standby_z.saved_timer.to_string()
-                },
-                standby_z.recovery_time,
-                standby_z.changeable,
-                standby_z.savable
-            );
+            }
         }
         ("set-timer", Some(args)) => {
             let mode = args.value_of("mode").unwrap();
@@ -358,7 +464,16 @@ if save is set, save current timer
                 PowerMode::Unknown => "unknown",
             };
 
-            println!("{}", mode);
+            match format {
+                "json" => {
+                    println!("{}", json!({
+                        "mode": mode,
+                    }));
+                },
+                _ => {
+                    println!("{}", mode);
+                },
+            }
         }
         _ => {}
     }
